@@ -29,15 +29,17 @@ widgets.wez provides ready-to-use status bar widgets for WezTerm. Every widget i
 ## Screenshots
 
 <div align="center">
-  <table>
+  <table width="100%">
     <tr>
-      <td align="center" width="50%">
-        <img src="assets/left.png" alt="Widgets on left status" width="450" />
+      <td align="center" width="100%">
+        <img src="assets/left.png" alt="Widgets on left status" width="100%" />
         <br />
         <sub><strong>Left status placement</strong></sub>
       </td>
-      <td align="center" width="50%">
-        <img src="assets/right.png" alt="Widgets on right status" width="450" />
+    </tr>
+    <tr>
+      <td align="center" width="100%">
+        <img src="assets/right.png" alt="Widgets on right status" width="100%" />
         <br />
         <sub><strong>Right status placement</strong></sub>
       </td>
@@ -78,7 +80,8 @@ local sys = wezterm.plugin.require("https://github.com/usrivastava92/widgets.wez
 #### Local development (file URL)
 
 ```lua
--- Ensure package.path includes the plugin directory, then:
+-- Ensure package.path can resolve plugin/systems/init.lua, then:
+package.path = "<path-to-widgets.wez>/plugin/?.lua;" .. package.path
 local sys = require("systems.init")
 ```
 
@@ -105,7 +108,7 @@ sys.apply_to_config(config, {
 })
 ```
 
-`apply_to_config` handles the `update-status` handler, widget rendering, and separator placement. Empty `left`/`right` arrays are valid.
+`apply_to_config` handles the `update-status` handler, widget rendering, and separator placement. Empty `left`/`right` arrays are valid; if both are empty, no handler is installed.
 
 ---
 
@@ -218,17 +221,17 @@ tabline.setup({
 | RAM | `vm_stat` + `sysctl` | `/proc/meminfo` (`MemAvailable`) | `Get-CimInstance Win32_OperatingSystem` |
 | Battery | `wezterm.battery_info()` | same | same |
 | Network | `netstat -ibn` per-interface | `/proc/net/dev` per-interface | `netstat -e` system-wide |
-| Disk space | `df -g /` | `df -h /` | `Win32_LogicalDisk C:` |
-| Disk I/O | `iostat -Id` (combined r/w) | `/proc/diskstats` (separate) | `Win32_PerfRawData _Total` (separate) |
+| Disk space | `df -g /System/Volumes/Data` | `df -h /` | `Win32_LogicalDisk C:` |
+| Disk I/O | `ioreg` block storage counters | `/proc/diskstats` root device counters | `Win32_PerfRawData_PerfDisk_PhysicalDisk` `_Total` counters |
 
-> **macOS disk I/O note:** Built-in tools report combined read+write throughput only. On macOS, `disk.read` and `disk.write` both show the same combined value — not fabricated separate rates. Linux and Windows provide true separate read/write.
+> **Disk I/O note:** Disk read/write widgets are delta-based. The first sample returns `00 kB`; subsequent samples report per-second rates when counters are available.
 
 ---
 
 ## Performance
 
 - **Throttling** — default intervals from 2 s (network) to 30 s (disk space) minimize command execution.
-- **Shared samples** — network download/upload share one `netstat`/`procfs` call. Disk read/write share one `diskstats`/`iostat` call. No duplicate commands.
+- **Shared samples** — network download/upload share one platform sample. Disk read/write share one platform sample. No duplicate commands.
 - **Global state** — all persistent data is namespaced under `wezterm.GLOBAL.widgets_*` to avoid collisions with other plugins or user code.
 
 ---
@@ -239,12 +242,12 @@ tabline.setup({
 
 - Confirm the plugin is loaded before `return config`.
 - Check that `status_update_interval` is set (default: 1000 ms).
-- If using local dev, verify `package.path` points to the `plugin/systems/` directory.
+- If using local dev, verify `package.path` includes `<path-to-widgets.wez>/plugin/?.lua`.
 
 **Fallback values showing (`--%`, `00 kB`)?**
 
-- Each widget returns fallback values on first sample, command failure, or parse failure. This is expected behavior — the value should update on the next tick.
-- For network widgets, the first sample always returns fallback (no prior data for delta calculation).
+- Widgets return fallback values on command failure, parse failure, or unsupported platforms.
+- Delta-based widgets return fallback on the first sample because there is no prior data for rate calculation. This includes network throughput and disk I/O, plus Linux CPU utilization.
 
 **Icons missing or showing as boxes?**
 
