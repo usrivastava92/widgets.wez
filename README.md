@@ -217,7 +217,7 @@ tabline.setup({
 
 | Widget | macOS | Linux | Windows |
 |--------|-------|-------|---------|
-| CPU | `top -l 1 -n 0` | `/proc/stat` delta | `Get-CimInstance Win32_Processor` |
+| CPU | `top -l 2 -n 0 -s 1` | `/proc/stat` delta | `Get-CimInstance Win32_Processor` |
 | RAM | `vm_stat` + `sysctl` | `/proc/meminfo` (`MemAvailable`) | `Get-CimInstance Win32_OperatingSystem` |
 | Battery | `wezterm.battery_info()` | same | same |
 | Network | `netstat -ibn` per-interface | `/proc/net/dev` per-interface | `netstat -e` system-wide |

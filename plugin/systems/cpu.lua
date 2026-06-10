@@ -14,7 +14,9 @@ function M.utilization.widget(opts)
 
   return util.make_getter(w, function()
     local result = util.run_os_command({
-      macos = { "top", "-l", "1", "-n", "0" },
+      -- macOS top's first sample can be an initialization sample; use the
+      -- second CPU line so this tracks Activity Monitor's current usage.
+      macos = { "top", "-l", "2", "-n", "0", "-s", "1" },
       linux = { "cat", "/proc/stat" },
       windows = {
         "powershell.exe",
@@ -31,7 +33,14 @@ function M.utilization.widget(opts)
     local stdout = result.stdout
 
     if util.is_macos() then
-      local idle = stdout:match("CPU usage:.* (%d+%.?%d*)%% idle")
+      local idle
+      for line in stdout:gmatch("[^\r\n]+") do
+        local match = line:match("CPU usage:.*,%s*([%d%.]+)%%%s+idle")
+          or line:match("CPU usage:.*%s([%d%.]+)%%%s+idle")
+        if match then
+          idle = match
+        end
+      end
       if idle then
         return util.format_percent(100 - util.parse_number(idle))
       end
@@ -41,9 +50,10 @@ function M.utilization.widget(opts)
         return "--%"
       end
       local fields = util.split_fields(line)
-      local idle = tonumber(fields[5])
+      local idle = (tonumber(fields[5]) or 0) + (tonumber(fields[6]) or 0)
       local total = 0
-      for i = 2, #fields do
+      -- guest/guest_nice are already included in user/nice in /proc/stat.
+      for i = 2, math.min(#fields, 9) do
         local v = tonumber(fields[i])
         if v then
           total = total + v

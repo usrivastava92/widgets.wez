@@ -83,16 +83,15 @@ local function fetch_netstats()
       end
     end
   elseif util.is_windows() then
-    rx_bytes = tonumber(stdout:match("Bytes%s*\n%s*(%d+)"))
-    local tx1 = stdout:match("Bytes%s*\n%s*%d+%s*\n%s*(%d+)")
-    if tx1 then
-      tx_bytes = tonumber(tx1)
-    end
-    if not rx_bytes or not tx_bytes then
-      local rx_match = stdout:match("Received%s*\n%s*\n?%s*(%d+)")
-      local tx_match = stdout:match("Sent%s*\n%s*\n?%s*(%d+)")
-      rx_bytes = rx_match and tonumber(rx_match)
-      tx_bytes = tx_match and tonumber(tx_match)
+    -- netstat -e prints counters as two columns on one line:
+    --   Bytes                  <received>            <sent>
+    for line in stdout:gmatch("[^\r\n]+") do
+      local rx, tx = line:match("^%s*Bytes%s+(%d+)%s+(%d+)")
+      if rx and tx then
+        rx_bytes = tonumber(rx)
+        tx_bytes = tonumber(tx)
+        break
+      end
     end
   end
 
