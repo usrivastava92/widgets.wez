@@ -2,7 +2,7 @@ local wezterm = require("wezterm")
 
 local function get_plugin_dir()
   for _, plugin in ipairs(wezterm.plugin.list()) do
-    if plugin.component:find("widgets%.wez") then
+    if plugin.component:find("widgets") and plugin.component:find("wez") then
       return plugin.plugin_dir
     end
   end
