@@ -14,7 +14,7 @@ function M.space.widget(opts)
 
   return util.make_getter(w, function()
     local result = util.run_os_command({
-      macos = { "df", "-g", "/" },
+      macos = { "df", "-g", "/System/Volumes/Data" },
       linux = { "df", "-h", "/" },
       windows = {
         "powershell.exe",
@@ -40,12 +40,10 @@ function M.space.widget(opts)
       end
       local fields = util.split_fields(lines[2])
       local cap_field
-      if util.is_macos() then
-        cap_field = fields[#fields - 1]
-      else
-        cap_field = fields[#fields]
-        if cap_field and not cap_field:match("%d") then
-          cap_field = fields[#fields - 1]
+      for _, field in ipairs(fields) do
+        if field:match("^%d+%%$") then
+          cap_field = field
+          break
         end
       end
       local pct = util.parse_number(cap_field)
@@ -86,19 +84,60 @@ end
 
 -- Fetch current disk I/O rates in bytes/sec.
 -- Returns { read_rate, write_rate } or nil on failure.
--- macOS: iostat reports instantaneous rate, so we return it directly.
--- Linux/Windows: cumulative counters, so we compute delta from previous sample.
+-- macOS/Linux/Windows: cumulative counters, so we compute delta from previous sample.
 local function fetch_disk_io_rates()
   if util.is_macos() then
-    local result = util.run_command({ "iostat", "-Id" })
-    if result and result.success then
-      local kb = result.stdout:match("(%d+%.?%d*)%s+KB/s")
-      if kb then
-        local rate = tonumber(kb) * 1024
-        return rate, rate
+    local result = util.run_command({ "ioreg", "-rc", "IOBlockStorageDriver", "-k", "Statistics", "-d", "1" })
+    if not result or not result.success then
+      return nil
+    end
+
+    local read_bytes = 0
+    local write_bytes = 0
+    for stats in result.stdout:gmatch('"Statistics"%s*=%s*%b{}') do
+      local read = stats:match('"Bytes %(Read%)"%s*=%s*(%d+)')
+      local write = stats:match('"Bytes %(Write%)"%s*=%s*(%d+)')
+      if read then
+        read_bytes = read_bytes + tonumber(read)
+      end
+      if write then
+        write_bytes = write_bytes + tonumber(write)
       end
     end
-    return nil
+
+    if read_bytes == 0 and write_bytes == 0 then
+      return nil
+    end
+
+    local now = os.time()
+
+    local G_KEY = IO_SAMPLE_KEY .. "_macos_prev"
+    local prev = wezterm.GLOBAL[G_KEY]
+    local read_rate, write_rate
+
+    if prev and prev.read_bytes and prev._ts then
+      local elapsed = now - prev._ts
+      if elapsed > 0 then
+        local dr = read_bytes - prev.read_bytes
+        local dw = write_bytes - prev.write_bytes
+        if dr >= 0 and dw >= 0 then
+          read_rate = dr / elapsed
+          write_rate = dw / elapsed
+        end
+      end
+    end
+
+    wezterm.GLOBAL[G_KEY] = {
+      read_bytes = read_bytes,
+      write_bytes = write_bytes,
+      _ts = now,
+    }
+
+    if not read_rate then
+      return nil
+    end
+
+    return read_rate, write_rate
 
   elseif util.is_linux() then
     local root_dev = nil
