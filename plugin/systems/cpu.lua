@@ -7,7 +7,7 @@ M.utilization = {}
 
 function M.utilization.widget(opts)
   local w = util.widget_base("cpu.utilization", opts, {
-    icon = wezterm.nerdfonts.md_chip,
+    icon = wezterm.nerdfonts.md_memory,
     color = "#7dcfff",
     throttle = 3,
   })

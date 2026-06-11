@@ -7,7 +7,7 @@ M.utilization = {}
 
 function M.utilization.widget(opts)
   local w = util.widget_base("ram.utilization", opts, {
-    icon = wezterm.nerdfonts.md_memory,
+    icon = wezterm.nerdfonts.md_chip,
     color = "#bb9af7",
     throttle = 3,
   })
@@ -45,15 +45,17 @@ function M._fetch_macos()
     page_size = tonumber(ps_match) or 16384
   end
 
-  -- Sum reclaimable categories: free, speculative, pages freeable by pager
-  local function extract_pages(pattern)
-    local v = vm.stdout:match(pattern .. ":%s*(%d+)")
-    return v and tonumber(v) or 0
+  local pages = {}
+  for line in vm.stdout:gmatch("[^\r\n]+") do
+    local label, value = line:match('^"?([^":]+)"?:%s*(%d+)%.?$')
+    if label and value then
+      pages[label] = tonumber(value) or 0
+    end
   end
 
-  local free = extract_pages("Pages free")
-  local speculative = extract_pages("Pages speculative")
-  local file_backed = extract_pages("File-backed pages")
+  local free = pages["Pages free"] or 0
+  local speculative = pages["Pages speculative"] or 0
+  local file_backed = pages["File-backed pages"] or 0
 
   local reclaimable = (free + speculative + file_backed) * page_size
   local used = math.max(0, total - reclaimable)
