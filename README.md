@@ -8,9 +8,7 @@
 
   <p>
     <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey" alt="Platforms" />
-    <img src="https://img.shields.io/badge/license-MIT-blue" alt="License" />
-    <img src="https://img.shields.io/github/last-commit/usrivastava92/widgets.wez" alt="Last Commit" />
-    <a href="https://scorecard.dev/status/github.com/usrivastava92/widgets.wez"><img src="https://api.scorecard.dev/projects/github.com/usrivastava92/widgets.wez/badge" alt="OpenSSF Scorecard" /></a>
+    <img src="https://img.shields.io/badge/license-MIT-blue" alt="License" />    <a href="https://scorecard.dev/status/github.com/usrivastava92/widgets.wez"><img src="https://api.scorecard.dev/projects/github.com/usrivastava92/widgets.wez/badge" alt="OpenSSF Scorecard" /></a>
   </p>
 </div>
 
