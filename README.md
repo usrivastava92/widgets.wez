@@ -9,6 +9,8 @@
   <p>
     <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey" alt="Platforms" />
     <img src="https://img.shields.io/badge/license-MIT-blue" alt="License" />
+    <img src="https://img.shields.io/github/last-commit/usrivastava92/widgets.wez" alt="Last Commit" />
+    <a href="https://scorecard.dev/status/github.com/usrivastava92/widgets.wez"><img src="https://api.scorecard.dev/projects/github.com/usrivastava92/widgets.wez/badge" alt="OpenSSF Scorecard" /></a>
   </p>
 </div>
 
@@ -75,6 +77,26 @@ Add to your `wezterm.lua`:
 
 ```lua
 local sys = wezterm.plugin.require("https://github.com/usrivastava92/widgets.wez")
+```
+
+### Updating
+
+WezTerm caches plugins locally and does **not** auto-update them. After pulling new changes from GitHub, run this from the WezTerm debug overlay (<kbd>Ctrl+Shift+L</kbd> → type the command):
+
+```lua
+wezterm.plugin.update_all()
+```
+
+Then restart WezTerm (or reload your config with `wezterm.reload_configuration()`).
+
+To pin a specific version (recommended for stability):
+
+```lua
+-- Pin to a git tag:
+local sys = wezterm.plugin.require("https://github.com/usrivastava92/widgets.wez", { tag = "v1.0.0" })
+
+-- Pin to a specific branch:
+local sys = wezterm.plugin.require("https://github.com/usrivastava92/widgets.wez", { ref = "main" })
 ```
 
 #### Local development (file URL)
@@ -237,6 +259,12 @@ tabline.setup({
 ---
 
 ## Troubleshooting
+
+**Plugin not reflecting latest GitHub changes?**
+
+- WezTerm caches plugins locally. Run `wezterm.plugin.update_all()` from the debug overlay (<kbd>Ctrl+Shift+L</kbd>) to pull the latest version.
+- To force a clean re-clone, delete the plugin cache: `rm -rf ~/Library/Application\ Support/wezterm/plugins/` (macOS) or `rm -rf ~/.local/share/wezterm/plugins/` (Linux).
+- Consider pinning to a git tag for reproducible installs: `{ tag = "v1.0.0" }`.
 
 **Widgets not appearing?**
 
