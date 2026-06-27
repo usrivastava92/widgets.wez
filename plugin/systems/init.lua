@@ -2,6 +2,8 @@ local wezterm = require("wezterm")
 
 local sys = {}
 
+sys.VERSION = "1.0.0"
+
 sys.cpu = require("systems.cpu")
 sys.ram = require("systems.ram")
 sys.battery = require("systems.battery")

@@ -1,5 +1,8 @@
 local wezterm = require("wezterm")
 
+local VERSION = "1.0.0"
+wezterm.log_info("widgets.wez v" .. VERSION)
+
 local function get_plugin_dir()
   for _, plugin in ipairs(wezterm.plugin.list()) do
     if plugin.component:find("widgets") and plugin.component:find("wez") then
