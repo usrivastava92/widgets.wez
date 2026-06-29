@@ -78,6 +78,16 @@ Add to your `wezterm.lua`:
 local sys = wezterm.plugin.require("https://github.com/usrivastava92/widgets.wez")
 ```
 
+### Type annotations
+
+LuaLS type annotations for widgets.wez are available through [wezterm-types](https://github.com/DrKJeff16/wezterm-types).
+If you use wezterm-types, annotate the plugin import like this:
+
+```lua
+---@type Widgets
+local sys = wezterm.plugin.require("https://github.com/usrivastava92/widgets.wez")
+```
+
 ### Updating
 
 WezTerm caches plugins locally and does **not** auto-update them. After pulling new changes from GitHub, run this from the WezTerm debug overlay (<kbd>Ctrl+Shift+L</kbd> → type the command):
